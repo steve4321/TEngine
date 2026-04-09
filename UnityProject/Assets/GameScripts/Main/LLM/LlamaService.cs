@@ -39,16 +39,15 @@ namespace DigitalHuman.LLM
         /// </summary>
         public static void InitBackend()
         {
-            // 显式加载 CUDA 后端，避免加载所有 CPU 变体
+            // 加载所有 ggml 后端（CUDA/CPU/Metal 等）
             string pluginsPath = System.IO.Path.Combine(
                 Application.dataPath, "Plugins", "Windows", "x86_64");
-            string cudaDllPath = System.IO.Path.Combine(pluginsPath, "ggml-cuda.dll");
-            IntPtr pathPtr = Marshal.StringToHGlobalAnsi(cudaDllPath);
+            IntPtr pathPtr = Marshal.StringToHGlobalAnsi(pluginsPath);
             try
             {
-                Debug.Log("[LlamaService] Loading ggml-cuda backend from: " + cudaDllPath);
-                Native.ggml_backend_load(pathPtr);  // 加载指定的 CUDA 后端
-                Debug.Log("[LlamaService] CUDA backend loaded - OK");
+                Debug.Log("[LlamaService] Loading ggml backends from: " + pluginsPath);
+                Native.ggml_backend_load_all_from_path(pathPtr);
+                Debug.Log("[LlamaService] All ggml backends loaded - OK");
             }
             finally
             {
@@ -85,7 +84,7 @@ namespace DigitalHuman.LLM
 
                 // 1. 加载模型
                 var modelParams = Native.llama_model_default_params();
-                modelParams.nGpuLayers = 99;  // 全部层 GPU 加速（使用 ggml-cuda.dll）
+                modelParams.nGpuLayers = 99;  // 全部层 GPU 加速
                 modelParams.useMmap = false;
                 modelParams.useMlock = false;
 
